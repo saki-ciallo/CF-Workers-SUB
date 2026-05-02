@@ -238,24 +238,27 @@ async function sortWireGuardLinks(text) {
 }
 
 function compareWireGuardPrefix(a, b) {
-	const keyA = getPrefixKey(a);
-	const keyB = getPrefixKey(b);
+	const keyA = getSortKey(a);
+	const keyB = getSortKey(b);
+	if (keyA.flag !== keyB.flag) return keyA.flag.localeCompare(keyB.flag, 'en', { sensitivity: 'base' });
 	if (keyA.group !== keyB.group) return keyA.group - keyB.group;
 	const cmp = keyA.prefix.localeCompare(keyB.prefix, 'en', { numeric: true, sensitivity: 'base' });
 	if (cmp !== 0) return cmp;
 	return a.localeCompare(b, 'en', { numeric: true, sensitivity: 'base' });
 }
 
-function getPrefixKey(text) {
+function getSortKey(text) {
 	const line = (text || '').trim();
-	const isWireGuard = line.toLowerCase().startsWith('wireguard://');
-	const target = isWireGuard ? (line.match(/#(.+)$/)?.[1] || line) : line;
-	const prefix = (target.match(/^[A-Za-z0-9]+/) || [target])[0].toLowerCase();
+	const name = decodeURIComponent((line.match(/#(.+)$/)?.[1] || line));
+	const flagMatch = name.match(/([\u{1F1E6}-\u{1F1FF}]{2})/u);
+	const flag = flagMatch ? flagMatch[1] : '';
+	const cleaned = name.replace(/([\u{1F1E6}-\u{1F1FF}]{2})/gu, '').trim();
+	const prefix = (cleaned.match(/^[A-Za-z0-9]+/) || [cleaned])[0].toLowerCase();
 	const first = prefix.charAt(0);
 	let group = 2;
 	if (/^[A-Za-z]/.test(first)) group = 0;
 	else if (/^[0-9]/.test(first)) group = 1;
-	return { group, prefix };
+	return { flag, group, prefix };
 }
 
 async function nginx() {
