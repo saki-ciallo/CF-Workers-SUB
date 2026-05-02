@@ -1,3 +1,4 @@
+
 // 部署完成后在网址后面加上这个，获取自建节点和机场聚合节点，/?token=auto或/auto或
 
 let mytoken = 'auto';
@@ -87,7 +88,6 @@ export default {
 					自建节点 += x + '\n';
 				}
 			}
-			自建节点 = await sortWireGuardLinks(SelfBuildSort(自建节点));
 			MainData = 自建节点;
 			urls = await ADD(订阅链接);
 			await sendMessage(`#获取订阅 ${FileName}`, request.headers.get('CF-Connecting-IP'), `UA: ${userAgentHeader}</tg-spoiler>\n域名: ${url.hostname}\n<tg-spoiler>入口: ${url.pathname + url.search}</tg-spoiler>`);
@@ -191,15 +191,15 @@ export default {
 			if (订阅格式 == 'base64' || token == fakeToken) {
 				return new Response(base64Data, { headers: responseHeaders });
 			} else if (订阅格式 == 'clash') {
-				subConverterUrl = `${subProtocol}://${subConverter}/sub?target=clash&url=${encodeURIComponent(订阅转换URL)}&insert=false&config=${encodeURIComponent(subConfig)}&emoji=true&list=false&tfo=false&scv=true&fdn=false&sort=false&new_name=true&udp=true`;
+				subConverterUrl = `${subProtocol}://${subConverter}/sub?target=clash&url=${encodeURIComponent(订阅转换URL)}&insert=false&config=${encodeURIComponent(subConfig)}&emoji=true&list=false&tfo=false&scv=true&fdn=false&sort=false&new_name=true`;
 			} else if (订阅格式 == 'singbox') {
-				subConverterUrl = `${subProtocol}://${subConverter}/sub?target=singbox&url=${encodeURIComponent(订阅转换URL)}&insert=false&config=${encodeURIComponent(subConfig)}&emoji=true&list=false&tfo=false&scv=true&fdn=false&sort=false&new_name=true&udp=true`;
+				subConverterUrl = `${subProtocol}://${subConverter}/sub?target=singbox&url=${encodeURIComponent(订阅转换URL)}&insert=false&config=${encodeURIComponent(subConfig)}&emoji=true&list=false&tfo=false&scv=true&fdn=false&sort=false&new_name=true`;
 			} else if (订阅格式 == 'surge') {
-				subConverterUrl = `${subProtocol}://${subConverter}/sub?target=surge&ver=4&url=${encodeURIComponent(订阅转换URL)}&insert=false&config=${encodeURIComponent(subConfig)}&emoji=true&list=false&tfo=false&scv=true&fdn=false&sort=false&new_name=true&udp=true`;
+				subConverterUrl = `${subProtocol}://${subConverter}/sub?target=surge&ver=4&url=${encodeURIComponent(订阅转换URL)}&insert=false&config=${encodeURIComponent(subConfig)}&emoji=true&list=false&tfo=false&scv=true&fdn=false&sort=false&new_name=true`;
 			} else if (订阅格式 == 'quanx') {
 				subConverterUrl = `${subProtocol}://${subConverter}/sub?target=quanx&url=${encodeURIComponent(订阅转换URL)}&insert=false&config=${encodeURIComponent(subConfig)}&emoji=true&list=false&tfo=false&scv=true&fdn=false&sort=false&udp=true`;
 			} else if (订阅格式 == 'loon') {
-				subConverterUrl = `${subProtocol}://${subConverter}/sub?target=loon&url=${encodeURIComponent(订阅转换URL)}&insert=false&config=${encodeURIComponent(subConfig)}&emoji=true&list=false&tfo=false&scv=true&fdn=false&sort=false&udp=true`;
+				subConverterUrl = `${subProtocol}://${subConverter}/sub?target=loon&url=${encodeURIComponent(订阅转换URL)}&insert=false&config=${encodeURIComponent(subConfig)}&emoji=true&list=false&tfo=false&scv=true&fdn=false&sort=false`;
 			}
 			//console.log(订阅转换URL);
 			try {
@@ -225,40 +225,6 @@ async function ADD(envadd) {
 	const add = addtext.split('\n');
 	//console.log(add);
 	return add;
-}
-
-function SelfBuildSort(text) {
-	return (text || "").split('\n').map(item => item.trim()).filter(Boolean).join('\n');
-}
-
-async function sortWireGuardLinks(text) {
-	const links = (text || '').split('\n').map(item => item.trim()).filter(Boolean);
-	links.sort((a, b) => compareWireGuardPrefix(a, b));
-	return links.join('\n');
-}
-
-function compareWireGuardPrefix(a, b) {
-	const keyA = getSortKey(a);
-	const keyB = getSortKey(b);
-	if (keyA.flag !== keyB.flag) return keyA.flag.localeCompare(keyB.flag, 'en', { sensitivity: 'base' });
-	if (keyA.group !== keyB.group) return keyA.group - keyB.group;
-	const cmp = keyA.prefix.localeCompare(keyB.prefix, 'en', { numeric: true, sensitivity: 'base' });
-	if (cmp !== 0) return cmp;
-	return a.localeCompare(b, 'en', { numeric: true, sensitivity: 'base' });
-}
-
-function getSortKey(text) {
-	const line = (text || '').trim();
-	const name = decodeURIComponent((line.match(/#(.+)$/)?.[1] || line));
-	const flagMatch = name.match(/([\u{1F1E6}-\u{1F1FF}]{2})/u);
-	const flag = flagMatch ? flagMatch[1] : '';
-	const cleaned = name.replace(/([\u{1F1E6}-\u{1F1FF}]{2})/gu, '').trim();
-	const prefix = (cleaned.match(/^[A-Za-z0-9]+/) || [cleaned])[0].toLowerCase();
-	const first = prefix.charAt(0);
-	let group = 2;
-	if (/^[A-Za-z]/.test(first)) group = 0;
-	else if (/^[0-9]/.test(first)) group = 1;
-	return { flag, group, prefix };
 }
 
 async function nginx() {
@@ -491,7 +457,7 @@ async function getUrl(request, targetUrl, 追加UA, userAgentHeader) {
 		redirect: "follow",
 		cf: {
 			// 忽略SSL证书验证
-			insecureSkipVerify: false,
+			insecureSkipVerify: true,
 			// 允许自签名证书
 			allowUntrusted: true,
 			// 禁用证书验证
