@@ -1,4 +1,3 @@
-
 // 部署完成后在网址后面加上这个，获取自建节点和机场聚合节点，/?token=auto或/auto或
 
 let mytoken = 'auto';
@@ -88,6 +87,7 @@ export default {
 					自建节点 += x + '\n';
 				}
 			}
+			自建节点 = await sortWireGuardLinks(SelfBuildSort(自建节点));
 			MainData = 自建节点;
 			urls = await ADD(订阅链接);
 			await sendMessage(`#获取订阅 ${FileName}`, request.headers.get('CF-Connecting-IP'), `UA: ${userAgentHeader}</tg-spoiler>\n域名: ${url.hostname}\n<tg-spoiler>入口: ${url.pathname + url.search}</tg-spoiler>`);
@@ -225,6 +225,37 @@ async function ADD(envadd) {
 	const add = addtext.split('\n');
 	//console.log(add);
 	return add;
+}
+
+function SelfBuildSort(text) {
+	return (text || "").split('\n').map(item => item.trim()).filter(Boolean).join('\n');
+}
+
+async function sortWireGuardLinks(text) {
+	const links = (text || '').split('\n').map(item => item.trim()).filter(Boolean);
+	links.sort((a, b) => compareWireGuardPrefix(a, b));
+	return links.join('\n');
+}
+
+function compareWireGuardPrefix(a, b) {
+	const keyA = getPrefixKey(a);
+	const keyB = getPrefixKey(b);
+	if (keyA.group !== keyB.group) return keyA.group - keyB.group;
+	const cmp = keyA.prefix.localeCompare(keyB.prefix, 'en', { numeric: true, sensitivity: 'base' });
+	if (cmp !== 0) return cmp;
+	return a.localeCompare(b, 'en', { numeric: true, sensitivity: 'base' });
+}
+
+function getPrefixKey(text) {
+	const line = (text || '').trim();
+	const isWireGuard = line.toLowerCase().startsWith('wireguard://');
+	const target = isWireGuard ? (line.match(/#(.+)$/)?.[1] || line) : line;
+	const prefix = (target.match(/^[A-Za-z0-9]+/) || [target])[0].toLowerCase();
+	const first = prefix.charAt(0);
+	let group = 2;
+	if (/^[A-Za-z]/.test(first)) group = 0;
+	else if (/^[0-9]/.test(first)) group = 1;
+	return { group, prefix };
 }
 
 async function nginx() {
